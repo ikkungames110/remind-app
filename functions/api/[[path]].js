@@ -9,7 +9,7 @@ function parse(b) {
   const text = String(b.text || '').trim().slice(0, 200);
   if (!text) return null;
   if (!b.repeat) {
-    const at = Number(b.at);
+    const at = b.after ? Date.now() + Number(b.after) * 60e3 : Number(b.at);
     return at > 0 ? { text, repeat: false, at } : null;
   }
   const days = [...new Set((b.days || []).map(Number))].filter((d) => d >= 0 && d <= 6);
