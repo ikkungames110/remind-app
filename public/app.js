@@ -12,6 +12,15 @@ $('month').value = now.getMonth() + 1;
 $('day').value = now.getDate();
 $('onceTime').value = `${pad(now.getHours())}:00`;
 
+document.querySelectorAll('#quick button').forEach((b) => {
+  b.onclick = () => {
+    const t = new Date(Date.now() + b.dataset.min * 60e3);
+    $('month').value = t.getMonth() + 1;
+    $('day').value = t.getDate();
+    $('onceTime').value = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
+  };
+});
+
 const days = new Set([1, 2, 3, 4, 5]);
 WD.forEach((w, i) => {
   const b = document.createElement('button');
@@ -29,6 +38,7 @@ const mode = () => document.querySelector('input[name=mode]:checked').value;
 const sync = () => {
   const rep = $('repeat').checked;
   $('once').hidden = rep;
+  $('quick').hidden = rep;
   $('onceTime').required = !rep;
   $('rep').hidden = !rep;
   $('modeTime').hidden = mode() !== 'time';

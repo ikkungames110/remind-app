@@ -70,14 +70,15 @@ input[type="time"] { min-height: 44px; }
 #rep { display: flex; flex-direction: column; gap: 12px; }
 #rep[hidden], [hidden] { display: none !important; }
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.days button, .seg span {
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.days button, .seg span, .quick button {
   border: 1px solid var(--line);
   background: var(--bg);
   border-radius: 10px;
   padding: 9px 0;
   text-align: center;
 }
-.days button.on, .seg input:checked + span {
+.days button.on, .seg input:checked + span, .quick button:active {
   background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
 }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
