@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111111">
+<title>リマインド</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <button id="notify" class="sub" hidden>通知を有効にする</button>
+
+  <form id="form">
+    <input id="text" placeholder="内容" autocomplete="off" required>
+
+    <label class="switch"><span>繰り返し</span><input type="checkbox" id="repeat"></label>
+
+    <div id="once" class="row">
+      <select id="month"></select>
+      <select id="day"></select>
+      <input type="time" id="onceTime" required>
+    </div>
+
+    <div id="rep" hidden>
+      <div id="days" class="days"></div>
+      <div class="seg">
+        <label><input type="radio" name="mode" value="time" checked><span>時刻</span></label>
+        <label><input type="radio" name="mode" value="interval"><span>時間おき</span></label>
+      </div>
+      <div id="modeTime" class="row"><input type="time" id="time" value="09:00"></div>
+      <div id="modeInterval" class="row" hidden>
+        <select id="every"></select>
+        <input type="time" id="start" value="09:00">
+        <span class="dash">–</span>
+        <input type="time" id="end" value="21:00">
+      </div>
+    </div>
+
+    <button type="submit">登録</button>
+  </form>
+
+  <ul id="list"></ul>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

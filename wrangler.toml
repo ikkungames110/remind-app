@@ -1,0 +1,8 @@
+name = "remind-app"
+pages_build_output_dir = "public"
+compatibility_date = "2025-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "remind-app"
+database_id = "fdbd6245-93b0-4e5f-b1b8-5655b7a500cf"
