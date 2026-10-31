@@ -15,9 +15,15 @@
 <main>
   <button id="notify" class="sub" hidden>通知を有効にする</button>
 
-  <form id="form">
-    <input id="text" placeholder="内容" autocomplete="off" required>
+  <ul id="list"></ul>
 
+  <form id="form">
+    <div class="row">
+      <input id="text" placeholder="内容" autocomplete="off" required>
+      <button type="button" id="mic" class="mic" aria-label="音声入力" hidden></button>
+    </div>
+
+    <label class="switch"><span>タスク<small>完了するまで残す</small></span><input type="checkbox" id="task"></label>
     <label class="switch"><span>繰り返し</span><input type="checkbox" id="repeat"></label>
 
     <div id="once" class="row">
@@ -49,9 +55,8 @@
 
     <button type="submit">登録</button>
   </form>
-
-  <ul id="list"></ul>
 </main>
+<script src="/voice.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

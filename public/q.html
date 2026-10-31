@@ -11,7 +11,10 @@
 <body>
 <main>
   <form id="form">
-    <input id="text" placeholder="内容" autocomplete="off" autofocus>
+    <div class="row">
+      <input id="text" placeholder="内容" autocomplete="off" autofocus>
+      <button type="button" id="mic" class="mic" aria-label="音声入力" hidden></button>
+    </div>
     <div id="quick" class="quick">
       <button type="button" data-min="5">5分後</button>
       <button type="button" data-min="10">10分後</button>
@@ -21,9 +24,11 @@
     <div id="done" class="w" hidden>登録しました</div>
   </form>
 </main>
+<script src="/voice.js"></script>
 <script>
 const text = document.getElementById('text');
 const done = document.getElementById('done');
+attachVoice(text, document.getElementById('mic'));
 document.getElementById('form').onsubmit = (e) => e.preventDefault();
 document.querySelectorAll('#quick button').forEach((b) => {
   b.onclick = async () => {

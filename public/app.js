@@ -47,6 +47,8 @@ const sync = () => {
 $('repeat').onchange = sync;
 document.querySelectorAll('input[name=mode]').forEach((r) => (r.onchange = sync));
 
+attachVoice($('text'), $('mic'));
+
 // ---- 一覧 ----
 const fmtDays = (ds) => (ds.length === 7 ? '毎日' : [...ds].sort().map((d) => WD[d]).join(''));
 const when = (r) => {
@@ -58,28 +60,49 @@ const when = (r) => {
   return `${fmtDays(r.days)} ${r.time}`;
 };
 
+const setBadge = (n) => {
+  if (!('setAppBadge' in navigator)) return;
+  (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+};
+
+let first = true;
 async function load() {
   const list = await (await fetch('/api/reminders')).json();
   $('list').replaceChildren(
     ...list.map((r) => {
       const li = document.createElement('li');
-      li.innerHTML = '<div class="body"><div class="t"></div><div class="w"></div></div><button class="del" aria-label="削除">×</button>';
+      li.innerHTML = r.task
+        ? '<button class="check" aria-label="完了"></button><div class="body"><div class="t"></div><div class="w"></div></div>'
+        : '<div class="body"><div class="t"></div><div class="w"></div></div><button class="del" aria-label="削除">×</button>';
       li.querySelector('.t').textContent = r.text;
-      li.querySelector('.w').textContent = when(r);
-      li.querySelector('.del').onclick = async () => {
-        if (!confirm('削除しますか？')) return;
-        await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
-        load();
-      };
+      li.querySelector('.w').textContent = when(r) + (r.task && r.next === null ? '（通知済み）' : '');
+      if (r.task) {
+        li.classList.add('task');
+        if (r.next === null) li.classList.add('due');
+        li.querySelector('.check').onclick = async () => {
+          li.classList.add('done');
+          await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
+          load();
+        };
+      } else {
+        li.querySelector('.del').onclick = async () => {
+          if (!confirm('削除しますか？')) return;
+          await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
+          load();
+        };
+      }
       return li;
     }),
   );
+  setBadge(list.filter((r) => r.task).length);
+  if (first) scrollTo(0, document.body.scrollHeight);
+  first = false;
 }
 
 // ---- 登録 ----
 $('form').onsubmit = async (e) => {
   e.preventDefault();
-  const body = { text: $('text').value, repeat: $('repeat').checked };
+  const body = { text: $('text').value, task: $('task').checked, repeat: $('repeat').checked };
   if (body.repeat) {
     if (!days.size) return alert('曜日を選択してください');
     body.days = [...days];

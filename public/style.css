@@ -27,10 +27,16 @@ body {
   font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
+/* 親指で届くように、フォームを画面下側に寄せる */
 main {
   max-width: 480px;
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 40px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);
 }
 form {
   background: var(--card);
@@ -55,6 +61,14 @@ input[type="time"] { min-height: 44px; }
 .row { display: flex; gap: 8px; align-items: center; }
 .dash { color: var(--muted); }
 .switch { display: flex; justify-content: space-between; align-items: center; }
+.switch small { color: var(--muted); font-size: 12px; margin-left: 8px; }
+.mic {
+  flex: none; width: 46px; height: 46px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--bg) center / 22px no-repeat;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='3' width='6' height='12' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0M12 18v3'/%3E%3C/svg%3E");
+}
+.mic.on { background-color: #ff3b30; border-color: #ff3b30; animation: pulse 1s infinite alternate; }
+@keyframes pulse { to { opacity: .6; } }
 .switch input {
   appearance: none; -webkit-appearance: none;
   width: 50px; height: 30px; border-radius: 15px;
@@ -89,7 +103,7 @@ button[type="submit"], .sub {
   background: var(--accent); color: var(--accent-fg); font-weight: 600;
 }
 .sub { width: 100%; margin-bottom: 16px; }
-#list { list-style: none; padding: 0; margin-top: 20px; }
+#list { list-style: none; padding: 0; margin-bottom: 12px; }
 #list li {
   display: flex; align-items: center; gap: 12px;
   background: var(--card); border-radius: 14px;
@@ -102,3 +116,12 @@ button[type="submit"], .sub {
   border: 0; background: none; color: var(--muted);
   font-size: 22px; width: 40px; height: 40px; border-radius: 50%;
 }
+#list .check {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--muted); background: none; margin-left: -4px;
+}
+#list li.task { padding-right: 16px; }
+#list li.due .w { color: #ff3b30; }
+#list li.done { opacity: .4; }
+#list li.done .check { background: #34c759; border-color: #34c759; }
+#list li.done .t { text-decoration: line-through; }
