@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#111111">
@@ -15,7 +15,14 @@
 <main>
   <button id="notify" class="sub" hidden>通知を有効にする</button>
 
-  <ul id="list"></ul>
+  <section id="tasksBox" class="box" hidden>
+    <h2>タスク</h2>
+    <ul id="tasks" class="list"></ul>
+  </section>
+  <section id="listBox" class="box" hidden>
+    <h2>予約</h2>
+    <ul id="list" class="list"></ul>
+  </section>
 
   <form id="form">
     <div class="row">

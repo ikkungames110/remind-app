@@ -46,6 +46,14 @@ export async function onRequest({ request, env, params }) {
     return json({ id, next, ...r });
   }
 
+  // タスク完了: 単発は削除、繰り返しは due を下ろして次回まで待つ
+  const done = path.match(/^reminders\/([^/]+)\/done$/);
+  if (done && request.method === 'POST') {
+    await db.prepare('DELETE FROM reminders WHERE id = ? AND next IS NULL').bind(done[1]).run();
+    await db.prepare("UPDATE reminders SET data = json_remove(data, '$.due') WHERE id = ?").bind(done[1]).run();
+    return json({ ok: true });
+  }
+
   if (path.startsWith('reminders/') && request.method === 'DELETE') {
     await db.prepare('DELETE FROM reminders WHERE id = ?').bind(path.slice(10)).run();
     return json({ ok: true });

@@ -21,6 +21,7 @@
   }
 }
 * { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: manipulation; }
 body {
   background: var(--bg);
   color: var(--fg);
@@ -31,14 +32,17 @@ body {
 main {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);
 }
 form {
+  flex: none;
+  max-height: 75dvh;
+  overflow-y: auto;
   background: var(--card);
   border-radius: 16px;
   padding: 16px;
@@ -107,25 +111,30 @@ button[type="submit"], .sub {
   background: var(--accent); color: var(--accent-fg); font-weight: 600;
 }
 .sub { width: 100%; margin-bottom: 16px; }
-#list { list-style: none; padding: 0; margin-bottom: 12px; }
-#list li {
+/* 一覧は画面の残りを分け合い、それぞれの中でスクロールする */
+.box { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; margin-bottom: 12px; }
+.box h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 4px 6px; }
+.list {
+  list-style: none; padding: 0; flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+}
+.list li {
   display: flex; align-items: center; gap: 12px;
   background: var(--card); border-radius: 14px;
   padding: 12px 8px 12px 16px; margin-bottom: 8px;
 }
-#list .body { flex: 1; min-width: 0; }
-#list .t { overflow-wrap: anywhere; }
-#list .w { color: var(--muted); font-size: 13px; margin-top: 2px; }
-#list .del {
+.list .body { flex: 1; min-width: 0; }
+.list .t { overflow-wrap: anywhere; }
+.list .w { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.list .del {
   border: 0; background: none; color: var(--muted);
   font-size: 22px; width: 40px; height: 40px; border-radius: 50%;
 }
-#list .check {
+.list .check {
   flex: none; width: 26px; height: 26px; border-radius: 50%;
   border: 2px solid var(--muted); background: none; margin-left: -4px;
 }
-#list li.task { padding-right: 16px; }
-#list li.due .w { color: #ff3b30; }
-#list li.done { opacity: .4; }
-#list li.done .check { background: #34c759; border-color: #34c759; }
-#list li.done .t { text-decoration: line-through; }
+#tasks li { padding-right: 16px; }
+.list li.done { opacity: .4; }
+.list li.done .check { background: #34c759; border-color: #34c759; }
+.list li.done .t { text-decoration: line-through; }

@@ -65,38 +65,39 @@ const setBadge = (n) => {
   (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
 };
 
-let first = true;
+const item = (r, isTask) => {
+  const li = document.createElement('li');
+  li.innerHTML = isTask
+    ? '<button class="check" aria-label="完了"></button><div class="body"><div class="t"></div><div class="w"></div></div>'
+    : '<div class="body"><div class="t"></div><div class="w"></div></div><button class="del" aria-label="削除">×</button>';
+  li.querySelector('.t').textContent = r.text;
+  li.querySelector('.w').textContent = (r.task && !isTask ? 'タスク・' : '') + when(r);
+  if (isTask) {
+    li.querySelector('.check').onclick = async () => {
+      li.classList.add('done');
+      await fetch(`/api/reminders/${r.id}/done`, { method: 'POST' });
+      load();
+    };
+  } else {
+    li.querySelector('.del').onclick = async () => {
+      if (!confirm('削除しますか？')) return;
+      await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
+      load();
+    };
+  }
+  return li;
+};
+
 async function load() {
   const list = await (await fetch('/api/reminders')).json();
-  $('list').replaceChildren(
-    ...list.map((r) => {
-      const li = document.createElement('li');
-      li.innerHTML = r.task
-        ? '<button class="check" aria-label="完了"></button><div class="body"><div class="t"></div><div class="w"></div></div>'
-        : '<div class="body"><div class="t"></div><div class="w"></div></div><button class="del" aria-label="削除">×</button>';
-      li.querySelector('.t').textContent = r.text;
-      li.querySelector('.w').textContent = when(r) + (r.task && r.next === null ? '（通知済み）' : '');
-      if (r.task) {
-        li.classList.add('task');
-        if (r.next === null) li.classList.add('due');
-        li.querySelector('.check').onclick = async () => {
-          li.classList.add('done');
-          await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
-          load();
-        };
-      } else {
-        li.querySelector('.del').onclick = async () => {
-          if (!confirm('削除しますか？')) return;
-          await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
-          load();
-        };
-      }
-      return li;
-    }),
-  );
-  setBadge(list.filter((r) => r.task).length);
-  if (first) scrollTo(0, document.body.scrollHeight);
-  first = false;
+  // 現在のタスク = 通知時刻を過ぎて未完了のタスク。予約 = これから通知するもの
+  const tasks = list.filter((r) => r.due);
+  const scheduled = list.filter((r) => r.next !== null);
+  $('tasks').replaceChildren(...tasks.map((r) => item(r, true)));
+  $('list').replaceChildren(...scheduled.map((r) => item(r, false)));
+  $('tasksBox').hidden = !tasks.length;
+  $('listBox').hidden = !scheduled.length;
+  setBadge(tasks.length);
 }
 
 // ---- 登録 ----
@@ -151,3 +152,7 @@ if (!('PushManager' in window)) {
 
 sync();
 load();
+
+// ピンチ・ダブルタップでの拡大を止める
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('dblclick', (e) => e.preventDefault());
