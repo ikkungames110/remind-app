@@ -51,6 +51,17 @@ export async function onRequest({ request, env, params }) {
     return json({ ok: true });
   }
 
+  if (path === 'transcribe' && request.method === 'POST') {
+    const buf = new Uint8Array(await request.arrayBuffer());
+    if (!buf.length || buf.length > 5e6) return json({ error: 'invalid' }, 400);
+    let bin = '';
+    for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    const out = await env.AI.run('@cf/openai/whisper-large-v3-turbo', { audio: btoa(bin), language: 'ja' });
+    // 無音のときに Whisper が出しがちな定型文は捨てる
+    const text = (out.text || '').trim();
+    return json({ text: /^(ご視聴ありがとうございました|ありがとうございました)[。!！]*$/.test(text) ? '' : text });
+  }
+
   if (path === 'subscribe' && request.method === 'POST') {
     const s = await request.json();
     if (!s.endpoint || !s.keys?.p256dh || !s.keys?.auth) return json({ error: 'invalid' }, 400);
