@@ -4,22 +4,145 @@ const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, '0');
 
 // ---- フォーム初期化 ----
-const now = new Date(Date.now() + 3600e3);
-for (let m = 1; m <= 12; m++) $('month').add(new Option(`${m}月`, m));
-for (let d = 1; d <= 31; d++) $('day').add(new Option(`${d}日`, d));
 for (let h = 1; h <= 12; h++) $('every').add(new Option(`${h}時間おき`, h));
-$('month').value = now.getMonth() + 1;
-$('day').value = now.getDate();
-$('onceTime').value = `${pad(now.getHours())}:00`;
+
+// ---- 日時の選択 ----
+const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+// h は 1〜12、未選択は null。step は時計が今どちらを選ぶか ('h' | 'm')
+let pick;
+let touched = false;
+
+const set = (patch) => {
+  pick = { ...pick, ...patch };
+  touched = true;
+  drawPick();
+};
+const resetPick = () => {
+  const n = new Date();
+  pick = { date: midnight(n), pm: n.getHours() >= 12, h: null, m: 0, step: 'h' };
+  touched = false;
+  drawPick();
+};
+const hour24 = () => (pick.h % 12) + (pick.pm ? 12 : 0);
+
+const polar = (deg, r) => {
+  const a = (deg * Math.PI) / 180;
+  return `${(100 + r * Math.sin(a)).toFixed(2)} ${(100 - r * Math.cos(a)).toFixed(2)}`;
+};
+const hand = (deg, r, cls) => `<path class="hand ${cls}" d="M100 100L${polar(deg, r)}"/>`;
+
+function drawClock() {
+  const isH = pick.step === 'h';
+  const sel = isH ? (pick.h === null ? null : pick.h * 30) : pick.m * 6;
+  let s = '<circle class="face" cx="100" cy="100" r="99"/>';
+  for (let i = 0; i < 60; i++) {
+    const long = i % 5 === 0;
+    s += `<path class="tick" d="M${polar(i * 6, long ? 89 : 92)}L${polar(i * 6, 95)}"/>`;
+  }
+  if (sel !== null) {
+    const [x, y] = polar(sel, 72).split(' ');
+    s += `<circle class="pickDot" cx="${x}" cy="${y}" r="14"/>`;
+  }
+  if (pick.h !== null) {
+    s += hand((pick.h % 12) * 30 + pick.m / 2, 44, isH ? 'on' : '');
+    s += hand(pick.m * 6, 62, isH ? '' : 'on');
+    s += '<circle class="hub" cx="100" cy="100" r="4"/>';
+  }
+  for (let i = 1; i <= 12; i++) {
+    const [x, y] = polar(i * 30, 72).split(' ');
+    const value = isH ? i : (i * 5) % 60;
+    const on = value === (isH ? pick.h : pick.m);
+    s += `<text x="${x}" y="${y}" class="${on ? 'sel' : ''}">${isH ? value : pad(value)}</text>`;
+  }
+  $('clock').innerHTML = s;
+}
+
+function drawPick() {
+  const d = pick.date;
+  $('dateBtn').textContent = `${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+  $('am').classList.toggle('on', !pick.pm);
+  $('pm').classList.toggle('on', pick.pm);
+  $('rdH').textContent = pick.h === null ? '--' : pick.h;
+  $('rdM').textContent = pick.h === null ? '--' : pad(pick.m);
+  $('rdM').disabled = pick.h === null;
+  $('rdH').classList.toggle('on', pick.step === 'h');
+  $('rdM').classList.toggle('on', pick.step === 'm');
+  drawClock();
+}
+
+// 1回目のタップで時、切り替わって2回目で分を選ぶ（分は5分刻み）
+$('clock').onclick = (e) => {
+  const box = $('clock').getBoundingClientRect();
+  const dx = e.clientX - box.left - box.width / 2;
+  const dy = e.clientY - box.top - box.height / 2;
+  const deg = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
+  if (pick.step === 'h') set({ h: Math.round(deg / 30) % 12 || 12, step: 'm' });
+  else set({ m: (Math.round(deg / 30) * 5) % 60 });
+};
+$('am').onclick = () => set({ pm: false });
+$('pm').onclick = () => set({ pm: true });
+$('rdH').onclick = () => set({ step: 'h' });
+$('rdM').onclick = () => set({ step: 'm' });
 
 document.querySelectorAll('#quick button').forEach((b) => {
   b.onclick = () => {
     const t = new Date(Date.now() + b.dataset.min * 60e3);
-    $('month').value = t.getMonth() + 1;
-    $('day').value = t.getDate();
-    $('onceTime').value = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
+    set({ date: midnight(t), pm: t.getHours() >= 12, h: t.getHours() % 12 || 12, m: t.getMinutes(), step: 'h' });
   };
 });
+
+// 開きっぱなしのアプリに戻ってきたとき、未操作なら今日・現在の午前午後に合わせ直す
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && !touched) resetPick();
+});
+
+// ---- カレンダー ----
+let calMonth;
+const drawCal = () => {
+  const y = calMonth.getFullYear();
+  const mo = calMonth.getMonth();
+  const today = midnight(new Date());
+  $('calTitle').textContent = `${y}年${mo + 1}月`;
+  $('calPrev').disabled = calMonth <= new Date(today.getFullYear(), today.getMonth(), 1);
+  const cells = Array.from({ length: calMonth.getDay() }, () => document.createElement('span'));
+  for (let d = 1; d <= new Date(y, mo + 1, 0).getDate(); d++) {
+    const date = new Date(y, mo, d);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = d;
+    b.disabled = date < today;
+    b.classList.toggle('today', +date === +today);
+    b.classList.toggle('on', +date === +pick.date);
+    b.onclick = () => {
+      set({ date });
+      $('calDlg').close();
+    };
+    cells.push(b);
+  }
+  $('calGrid').replaceChildren(...cells);
+};
+const shiftCal = (n) => {
+  calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + n, 1);
+  drawCal();
+};
+WD.forEach((w) => {
+  const s = document.createElement('span');
+  s.textContent = w;
+  $('calWeek').append(s);
+});
+$('calPrev').onclick = () => shiftCal(-1);
+$('calNext').onclick = () => shiftCal(1);
+$('dateBtn').onclick = () => {
+  calMonth = new Date(pick.date.getFullYear(), pick.date.getMonth(), 1);
+  drawCal();
+  $('calDlg').showModal();
+};
+// 枠の外をタップしたら閉じる
+$('calDlg').onclick = (e) => e.target === $('calDlg') && $('calDlg').close();
+
+// ---- 予約一覧 ----
+$('openList').onclick = () => $('listDlg').showModal();
+$('closeList').onclick = () => $('listDlg').close();
 
 const days = new Set([1, 2, 3, 4, 5]);
 WD.forEach((w, i) => {
@@ -37,12 +160,11 @@ WD.forEach((w, i) => {
 const mode = () => document.querySelector('input[name=mode]:checked').value;
 const sync = () => {
   const rep = $('repeat').checked;
-  $('once').hidden = rep;
+  $('dateBtn').hidden = rep;
   $('quick').hidden = rep;
-  $('onceTime').required = !rep;
   $('rep').hidden = !rep;
-  $('modeTime').hidden = mode() !== 'time';
   $('modeInterval').hidden = mode() !== 'interval';
+  $('clockBox').hidden = rep && mode() === 'interval';
 };
 $('repeat').onchange = sync;
 document.querySelectorAll('input[name=mode]').forEach((r) => (r.onchange = sync));
@@ -71,7 +193,7 @@ const item = (r, isTask) => {
     ? '<button class="check" aria-label="完了"></button><div class="body"><div class="t"></div><div class="w"></div></div>'
     : '<div class="body"><div class="t"></div><div class="w"></div></div><button class="del" aria-label="削除">×</button>';
   li.querySelector('.t').textContent = r.text;
-  li.querySelector('.w').textContent = (r.task && !isTask ? 'タスク・' : '') + when(r);
+  li.querySelector('.w').textContent = when(r);
   if (isTask) {
     li.querySelector('.check').onclick = async () => {
       li.classList.add('done');
@@ -96,31 +218,36 @@ async function load() {
   $('tasks').replaceChildren(...tasks.map((r) => item(r, true)));
   $('list').replaceChildren(...scheduled.map((r) => item(r, false)));
   $('tasksBox').hidden = !tasks.length;
-  $('listBox').hidden = !scheduled.length;
+  $('listEmpty').hidden = !!scheduled.length;
+  $('openList').textContent = scheduled.length ? `予約一覧（${scheduled.length}）` : '予約一覧';
   setBadge(tasks.length);
 }
 
 // ---- 登録 ----
 $('form').onsubmit = async (e) => {
   e.preventDefault();
-  const body = { text: $('text').value, task: $('task').checked, repeat: $('repeat').checked };
+  const body = { text: $('text').value, repeat: $('repeat').checked };
+  if (!$('clockBox').hidden && pick.h === null) return alert('時計で時刻を選んでください');
   if (body.repeat) {
     if (!days.size) return alert('曜日を選択してください');
     body.days = [...days];
     body.mode = mode();
-    if (body.mode === 'time') body.time = $('time').value;
+    if (body.mode === 'time') body.time = `${pad(hour24())}:${pad(pick.m)}`;
     else Object.assign(body, { every: +$('every').value, start: $('start').value, end: $('end').value });
   } else {
-    const [h, mi] = $('onceTime').value.split(':').map(Number);
-    const y = new Date().getFullYear();
-    let at = new Date(y, $('month').value - 1, +$('day').value, h, mi);
-    if (at <= Date.now()) at = new Date(y + 1, $('month').value - 1, +$('day').value, h, mi);
+    const d = pick.date;
+    const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour24(), pick.m);
+    if (at <= Date.now()) return alert('過ぎた時刻は登録できません');
     body.at = at.getTime();
   }
   const res = await fetch('/api/reminders', { method: 'POST', body: JSON.stringify(body) });
   if (!res.ok) return alert('登録できませんでした');
   $('text').value = '';
+  resetPick();
   load();
+  // 予約は一覧を開かないと見えないので、登録できたことをボタンで伝える
+  $('submit').textContent = '登録しました';
+  setTimeout(() => ($('submit').textContent = '登録'), 1500);
 };
 
 // ---- 通知 ----
@@ -150,6 +277,7 @@ if (!('PushManager' in window)) {
   };
 }
 
+resetPick();
 sync();
 load();
 

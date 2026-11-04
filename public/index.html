@@ -19,10 +19,6 @@
     <h2>タスク</h2>
     <ul id="tasks" class="list"></ul>
   </section>
-  <section id="listBox" class="box" hidden>
-    <h2>予約</h2>
-    <ul id="list" class="list"></ul>
-  </section>
 
   <form id="form">
     <div class="row">
@@ -30,13 +26,9 @@
       <button type="button" id="mic" class="mic" aria-label="音声入力" hidden></button>
     </div>
 
-    <label class="switch"><span>タスク<small>完了するまで残す</small></span><input type="checkbox" id="task"></label>
-    <label class="switch"><span>繰り返し</span><input type="checkbox" id="repeat"></label>
-
-    <div id="once" class="row">
-      <select id="month"></select>
-      <select id="day"></select>
-      <input type="time" id="onceTime" required>
+    <div class="row">
+      <button type="button" id="dateBtn" class="field"></button>
+      <label class="switch"><span>繰り返し</span><input type="checkbox" id="repeat"></label>
     </div>
     <div id="quick" class="quick">
       <button type="button" data-min="5">5分後</button>
@@ -51,7 +43,6 @@
         <label><input type="radio" name="mode" value="time" checked><span>時刻</span></label>
         <label><input type="radio" name="mode" value="interval"><span>時間おき</span></label>
       </div>
-      <div id="modeTime" class="row"><input type="time" id="time" value="09:00"></div>
       <div id="modeInterval" class="row" hidden>
         <select id="every"></select>
         <input type="time" id="start" value="09:00">
@@ -60,9 +51,43 @@
       </div>
     </div>
 
-    <button type="submit">登録</button>
+    <div id="clockBox">
+      <svg id="clock" viewBox="0 0 200 200" aria-label="時計"></svg>
+      <div class="ampm">
+        <button type="button" id="am">午前</button>
+        <div class="readout">
+          <button type="button" id="rdH" aria-label="時を選ぶ"></button><span>:</span><button type="button" id="rdM" aria-label="分を選ぶ"></button>
+        </div>
+        <button type="button" id="pm">午後</button>
+      </div>
+    </div>
+
+    <button type="submit" id="submit">登録</button>
   </form>
+
+  <button type="button" id="openList" class="ghost">予約一覧</button>
 </main>
+
+<dialog id="calDlg">
+  <div class="cal">
+    <div class="calHead">
+      <button type="button" id="calPrev" aria-label="前の月">‹</button>
+      <b id="calTitle"></b>
+      <button type="button" id="calNext" aria-label="次の月">›</button>
+    </div>
+    <div id="calWeek" class="calGrid calWeek"></div>
+    <div id="calGrid" class="calGrid"></div>
+  </div>
+</dialog>
+
+<dialog id="listDlg" class="full">
+  <div class="fullIn">
+    <h2>予約一覧</h2>
+    <p id="listEmpty" class="empty" hidden>予約はありません</p>
+    <ul id="list" class="list"></ul>
+    <button type="button" id="closeList" class="sub">閉じる</button>
+  </div>
+</dialog>
 <script src="/voice.js"></script>
 <script src="/app.js"></script>
 </body>

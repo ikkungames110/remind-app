@@ -37,21 +37,24 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 8px);
 }
 form {
-  flex: none;
-  max-height: 75dvh;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
   background: var(--card);
   border-radius: 16px;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
+form > * { flex: none; }
 input, select, button { font: inherit; color: inherit; }
-#text, select, input[type="time"] {
+button:disabled { opacity: .3; }
+#text, select, input[type="time"], .field {
+  text-align: left;
   width: 100%;
   min-width: 0;
   background: var(--bg);
@@ -66,8 +69,9 @@ input[type="time"] { min-height: 44px; }
 .row:has(#text) { align-items: stretch; }
 .row { display: flex; gap: 8px; align-items: center; }
 .dash { color: var(--muted); }
-.switch { display: flex; justify-content: space-between; align-items: center; }
-.switch small { color: var(--muted); font-size: 12px; margin-left: 8px; }
+.field { flex: 1; min-height: 44px; }
+.row .switch { flex: none; margin-left: auto; min-height: 44px; }
+.switch { display: flex; gap: 8px; align-items: center; font-size: 14px; }
 .mic {
   flex: none; width: 46px; height: 46px; border-radius: 10px;
   border: 1px solid var(--line); background: var(--bg) center / 22px no-repeat;
@@ -93,16 +97,56 @@ input[type="time"] { min-height: 44px; }
 #rep[hidden], [hidden] { display: none !important; }
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.days button, .seg span, .quick button {
+.days button, .seg span, .quick button, .ampm > button {
   border: 1px solid var(--line);
   background: var(--bg);
   border-radius: 10px;
   padding: 9px 0;
   text-align: center;
 }
-.days button.on, .seg input:checked + span, .quick button:active {
+.days button.on, .seg input:checked + span, .quick button:active, .ampm > button.on {
   background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
 }
+/* アナログ時計。タスクが無いときは余った高さの分だけ大きくする */
+#clockBox { display: flex; flex-direction: column; gap: 10px; }
+#clock { display: block; width: min(100%, 30dvh); margin: 0 auto; cursor: pointer; user-select: none; -webkit-user-select: none; }
+main:has(#tasksBox[hidden]) #clock { width: min(100%, 36dvh); }
+@media (max-height: 700px) { #text { min-height: 64px; } }
+#clock .face { fill: var(--bg); stroke: var(--line); }
+#clock .tick { stroke: var(--line); stroke-width: 1.5; }
+#clock .hand { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
+#clock .hand.on { stroke: var(--accent); }
+#clock .hub { fill: var(--accent); }
+#clock .pickDot { fill: var(--accent); }
+#clock text { fill: var(--fg); font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+#clock text.sel { fill: var(--accent-fg); font-weight: 600; }
+.ampm { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.readout { display: flex; align-items: center; font-size: 24px; font-variant-numeric: tabular-nums; }
+.readout button { border: 0; background: none; border-radius: 8px; min-width: 44px; padding: 2px 4px; }
+.readout button.on { background: var(--line); }
+/* カレンダーのポップアップ */
+dialog { border: 0; padding: 0; color: var(--fg); background: var(--card); }
+dialog::backdrop { background: rgba(0, 0, 0, .5); }
+#calDlg { margin: auto; width: min(calc(100vw - 32px), 360px); border-radius: 16px; }
+.cal { padding: 12px; }
+.calHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.calHead button { border: 0; background: none; font-size: 26px; line-height: 1; width: 44px; height: 44px; }
+.calGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.calWeek { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.calGrid button { border: 0; background: none; aspect-ratio: 1; border-radius: 50%; }
+.calGrid button.today { font-weight: 700; box-shadow: inset 0 0 0 1px var(--muted); }
+.calGrid button.on { background: var(--accent); color: var(--accent-fg); }
+/* 予約一覧（全画面） */
+dialog.full { width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; background: var(--bg); }
+.fullIn {
+  max-width: 480px; height: 100%; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 12px);
+}
+.fullIn h2 { font-size: 18px; flex: none; }
+.fullIn .sub { flex: none; margin: 0; }
+.empty { flex: 1; color: var(--muted); text-align: center; padding-top: 40dvh; }
+.ghost { flex: none; margin-top: 8px; min-height: 44px; border: 0; border-radius: 12px; background: var(--card); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .seg input { display: none; }
 .seg span { display: block; }
@@ -112,7 +156,7 @@ button[type="submit"], .sub {
 }
 .sub { width: 100%; margin-bottom: 16px; }
 /* 一覧は画面の残りを分け合い、それぞれの中でスクロールする */
-.box { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; margin-bottom: 12px; }
+.box { flex: 1 1 0; min-height: 96px; display: flex; flex-direction: column; margin-bottom: 12px; }
 .box h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 4px 6px; }
 .list {
   list-style: none; padding: 0; flex: 1; min-height: 0;

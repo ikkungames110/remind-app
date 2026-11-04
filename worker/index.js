@@ -10,14 +10,11 @@ async function run(env) {
   const { results: subs } = await env.DB.prepare('SELECT endpoint, p256dh, auth FROM subs').all();
   const jwk = JSON.parse(env.VAPID_JWK);
 
-  // 先にスケジュールを進める。タスクは due を立てて完了まで残す
+  // 先にスケジュールを進める。すべてタスクなので due を立てて完了まで残す
   for (const row of due) {
     const r = JSON.parse(row.data);
     const next = r.repeat ? nextAfter(r, now) : null;
-    if (r.task) {
-      await env.DB.prepare("UPDATE reminders SET next = ?, data = json_set(data, '$.due', json('true')) WHERE id = ?").bind(next, row.id).run();
-    } else if (next === null) await env.DB.prepare('DELETE FROM reminders WHERE id = ?').bind(row.id).run();
-    else await env.DB.prepare('UPDATE reminders SET next = ? WHERE id = ?').bind(next, row.id).run();
+    await env.DB.prepare("UPDATE reminders SET next = ?, data = json_set(data, '$.due', json('true')) WHERE id = ?").bind(next, row.id).run();
   }
   const { n: badge } = await env.DB.prepare("SELECT COUNT(*) AS n FROM reminders WHERE json_extract(data, '$.due')").first();
 

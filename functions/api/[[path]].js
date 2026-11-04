@@ -9,7 +9,7 @@ function parse(b) {
   const text = String(b.text || '').trim().slice(0, 200);
   if (!text) return null;
   const r = parseWhen(b);
-  return r && { text, ...(b.task ? { task: true } : {}), ...r };
+  return r && { text, ...r };
 }
 
 function parseWhen(b) {
