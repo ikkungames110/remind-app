@@ -37,8 +37,9 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 8px);
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 6px;
 }
+/* 高さが足りないときはタスク一覧から先に縮め、フォームは最後に縮める */
 form {
   flex: 0 1 auto;
   min-height: 0;
@@ -65,7 +66,8 @@ button:disabled { opacity: .3; }
   -webkit-appearance: none;
 }
 input[type="time"] { min-height: 44px; }
-#text { min-height: 96px; resize: none; line-height: 1.5; }
+#text { min-height: 84px; resize: none; line-height: 1.5; }
+@media (max-height: 720px) { #text { min-height: 60px; } }
 .row:has(#text) { align-items: stretch; }
 .row { display: flex; gap: 8px; align-items: center; }
 .dash { color: var(--muted); }
@@ -101,15 +103,15 @@ input[type="time"] { min-height: 44px; }
   border: 1px solid var(--line);
   background: var(--bg);
   border-radius: 10px;
-  padding: 9px 0;
+  padding: 7px 0;
   text-align: center;
 }
 .days button.on, .seg input:checked + span, .quick button:active, .ampm > button.on {
   background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
 }
-/* アナログ時計。高さを節約するため、午前午後は右側に縦に並べる */
+/* アナログ時計は右、時刻表示と午前午後は左に縦に並べる */
 #clockBox { display: flex; gap: 12px; align-items: stretch; }
-#clock { display: block; flex: 0 0 min(62%, 26dvh); min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#clock { display: block; flex: 0 0 min(58%, 24dvh); min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
 #clock .face { fill: var(--bg); stroke: var(--line); }
 #clock .tick { stroke: var(--line); stroke-width: 1.5; }
 #clock .hand { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
@@ -118,9 +120,9 @@ input[type="time"] { min-height: 44px; }
 #clock .pickDot { fill: var(--accent); }
 #clock text { fill: var(--fg); font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 #clock text.sel { fill: var(--accent-fg); font-weight: 600; }
-.ampm { flex: 1; min-width: 0; display: grid; grid-template-rows: auto 1fr 1fr; gap: 8px; }
-.readout { order: -1; display: flex; justify-content: center; align-items: center; font-size: 22px; font-variant-numeric: tabular-nums; }
-.readout button { border: 0; background: none; border-radius: 8px; min-width: 36px; min-height: 40px; padding: 2px; }
+.ampm { order: -1; flex: 1; min-width: 0; display: grid; grid-template-rows: auto 1fr 1fr; gap: 8px; }
+.readout { order: -1; display: flex; justify-content: center; align-items: center; font-size: 30px; font-variant-numeric: tabular-nums; }
+.readout button { border: 0; background: none; border-radius: 8px; min-width: 44px; min-height: 56px; padding: 2px; }
 .readout button.on { background: var(--line); }
 /* カレンダーのポップアップ */
 dialog { border: 0; padding: 0; color: var(--fg); background: var(--card); }
@@ -144,7 +146,11 @@ dialog.full { width: 100%; max-width: none; height: 100dvh; max-height: none; ma
 .fullIn h2 { font-size: 18px; flex: none; }
 .fullIn .sub { flex: none; margin: 0; }
 .empty { flex: 1; color: var(--muted); text-align: center; padding-top: 40dvh; }
-.ghost { flex: none; margin-top: 8px; min-height: 44px; border: 0; border-radius: 12px; background: var(--card); }
+/* 画面の下端まで背景を伸ばし、文字だけホームバーの上に置く */
+.ghost {
+  flex: none; margin-top: 6px; border: 0; border-radius: 12px; background: var(--card);
+  padding: 10px 0 max(10px, calc(env(safe-area-inset-bottom) - 6px));
+}
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .seg input { display: none; }
 .seg span { display: block; }
@@ -154,16 +160,16 @@ button[type="submit"], .sub {
 }
 .sub { width: 100%; margin-bottom: 16px; }
 /* 一覧は画面の残りを分け合い、それぞれの中でスクロールする */
-.box { flex: 1 1 0; min-height: 96px; display: flex; flex-direction: column; margin-bottom: 12px; }
-.box h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 4px 6px; }
+.box { flex: 0 1000 auto; min-height: 96px; display: flex; flex-direction: column; margin-bottom: 8px; }
+.box h2 { flex: none; font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 4px 4px; }
 .list {
-  list-style: none; padding: 0; flex: 1; min-height: 0;
+  list-style: none; padding: 0; flex: 1 1 auto; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
 }
 .list li {
   display: flex; align-items: center; gap: 12px;
   background: var(--card); border-radius: 14px;
-  padding: 12px 8px 12px 16px; margin-bottom: 8px;
+  padding: 8px 8px 8px 16px; margin-bottom: 6px;
 }
 .list .body { flex: 1; min-width: 0; }
 .list .t { overflow-wrap: anywhere; }
@@ -177,6 +183,10 @@ button[type="submit"], .sub {
   border: 2px solid var(--muted); background: none; margin-left: -4px;
 }
 #tasks li { padding-right: 16px; }
+#tasks li:last-child { margin-bottom: 0; }
+/* タスクが少ないときもフォームのすぐ上に寄せる */
+.box { justify-content: flex-end; }
+.box .list { flex: 0 1 auto; }
 .list li.done { opacity: .4; }
 .list li.done .check { background: #34c759; border-color: #34c759; }
 .list li.done .t { text-decoration: line-through; }
