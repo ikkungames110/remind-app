@@ -107,11 +107,9 @@ input[type="time"] { min-height: 44px; }
 .days button.on, .seg input:checked + span, .quick button:active, .ampm > button.on {
   background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
 }
-/* アナログ時計。タスクが無いときは余った高さの分だけ大きくする */
-#clockBox { display: flex; flex-direction: column; gap: 10px; }
-#clock { display: block; width: min(100%, 30dvh); margin: 0 auto; cursor: pointer; user-select: none; -webkit-user-select: none; }
-main:has(#tasksBox[hidden]) #clock { width: min(100%, 36dvh); }
-@media (max-height: 700px) { #text { min-height: 64px; } }
+/* アナログ時計。高さを節約するため、午前午後は右側に縦に並べる */
+#clockBox { display: flex; gap: 12px; align-items: stretch; }
+#clock { display: block; flex: 0 0 min(62%, 26dvh); min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
 #clock .face { fill: var(--bg); stroke: var(--line); }
 #clock .tick { stroke: var(--line); stroke-width: 1.5; }
 #clock .hand { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
@@ -120,9 +118,9 @@ main:has(#tasksBox[hidden]) #clock { width: min(100%, 36dvh); }
 #clock .pickDot { fill: var(--accent); }
 #clock text { fill: var(--fg); font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 #clock text.sel { fill: var(--accent-fg); font-weight: 600; }
-.ampm { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
-.readout { display: flex; align-items: center; font-size: 24px; font-variant-numeric: tabular-nums; }
-.readout button { border: 0; background: none; border-radius: 8px; min-width: 44px; padding: 2px 4px; }
+.ampm { flex: 1; min-width: 0; display: grid; grid-template-rows: auto 1fr 1fr; gap: 8px; }
+.readout { order: -1; display: flex; justify-content: center; align-items: center; font-size: 22px; font-variant-numeric: tabular-nums; }
+.readout button { border: 0; background: none; border-radius: 8px; min-width: 36px; min-height: 40px; padding: 2px; }
 .readout button.on { background: var(--line); }
 /* カレンダーのポップアップ */
 dialog { border: 0; padding: 0; color: var(--fg); background: var(--card); }
