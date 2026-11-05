@@ -24,16 +24,26 @@
     <div id="done" class="w" hidden>登録しました</div>
   </form>
 </main>
+<script src="/store.js"></script>
 <script src="/voice.js"></script>
 <script>
 const text = document.getElementById('text');
 const done = document.getElementById('done');
 attachVoice(text, document.getElementById('mic'));
 document.getElementById('form').onsubmit = (e) => e.preventDefault();
+// ホーム画面のアプリとは保存場所が別になることがあるので、合言葉は URL から受け取る
+const key = new URLSearchParams(location.hash.slice(1)).get('k');
+if (key) saveToken(key);
+if (!savedToken()) {
+  done.textContent = 'アプリの「予約一覧」にある「クイック登録のURLをコピー」のURLから開いてください';
+  done.hidden = false;
+}
 document.querySelectorAll('#quick button').forEach((b) => {
   b.onclick = async () => {
+    if (!savedToken()) return;
     if (!text.value.trim()) return text.focus();
-    const res = await fetch('/api/reminders', { method: 'POST', body: JSON.stringify({ text: text.value, after: b.dataset.min }) });
+    // 内容はアプリを次に開いたときに端末へ移り、サーバーからは消える
+    const res = await api('reminders', { method: 'POST', body: JSON.stringify({ text: text.value, after: b.dataset.min }) });
     if (!res.ok) return alert('登録できませんでした');
     text.value = '';
     done.textContent = `登録しました（${b.textContent}）`;

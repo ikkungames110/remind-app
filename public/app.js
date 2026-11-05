@@ -8,7 +8,7 @@ for (let h = 1; h <= 12; h++) $('every').add(new Option(`${h}時間おき`, h));
 
 // ---- 日時の選択 ----
 const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-// h は 1〜12、未選択は null。step は時計が今どちらを選ぶか ('h' | 'm')
+// h は文字盤の位置 0〜11（12時の位置が 0）、未選択は null。step は時計が今どちらを選ぶか ('h' | 'm')
 let pick;
 let touched = false;
 
@@ -23,7 +23,7 @@ const resetPick = () => {
   touched = false;
   drawPick();
 };
-const hour24 = () => (pick.h % 12) + (pick.pm ? 12 : 0);
+const hour24 = () => pick.h + (pick.pm ? 12 : 0);
 
 const polar = (deg, r) => {
   const a = (deg * Math.PI) / 180;
@@ -44,25 +44,25 @@ function drawClock() {
     s += `<circle class="pickDot" cx="${x}" cy="${y}" r="14"/>`;
   }
   if (pick.h !== null) {
-    s += hand((pick.h % 12) * 30 + pick.m / 2, 44, isH ? 'on' : '');
+    s += hand(pick.h * 30 + pick.m / 2, 44, isH ? 'on' : '');
     s += hand(pick.m * 6, 62, isH ? '' : 'on');
     s += '<circle class="hub" cx="100" cy="100" r="4"/>';
   }
-  for (let i = 1; i <= 12; i++) {
+  // 午前は 0〜11、午後は 12〜23 を文字盤に出す
+  for (let i = 0; i < 12; i++) {
     const [x, y] = polar(i * 30, 72).split(' ');
-    const value = isH ? i : (i * 5) % 60;
-    const on = value === (isH ? pick.h : pick.m);
-    s += `<text x="${x}" y="${y}" class="${on ? 'sel' : ''}">${isH ? value : pad(value)}</text>`;
+    const on = isH ? i === pick.h : i * 5 === pick.m;
+    const label = isH ? i + (pick.pm ? 12 : 0) : pad(i * 5);
+    s += `<text x="${x}" y="${y}" class="${on ? 'sel' : ''}">${label}</text>`;
   }
+  s += `<text x="100" y="132" class="ap">‹ ${pick.pm ? '午後' : '午前'} ›</text>`;
   $('clock').innerHTML = s;
 }
 
 function drawPick() {
   const d = pick.date;
   $('dateBtn').textContent = `${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）`;
-  $('am').classList.toggle('on', !pick.pm);
-  $('pm').classList.toggle('on', pick.pm);
-  $('rdH').textContent = pick.h === null ? '--' : pick.h;
+  $('rdH').textContent = pick.h === null ? '--' : hour24();
   $('rdM').textContent = pick.h === null ? '--' : pad(pick.m);
   $('rdM').disabled = pick.h === null;
   $('rdH').classList.toggle('on', pick.step === 'h');
@@ -72,22 +72,39 @@ function drawPick() {
 
 // 1回目のタップで時、切り替わって2回目で分を選ぶ（分は5分刻み）
 $('clock').onclick = (e) => {
+  if (flicked) return;
   const box = $('clock').getBoundingClientRect();
   const dx = e.clientX - box.left - box.width / 2;
   const dy = e.clientY - box.top - box.height / 2;
   const deg = ((Math.atan2(dx, -dy) * 180) / Math.PI + 360) % 360;
-  if (pick.step === 'h') set({ h: Math.round(deg / 30) % 12 || 12, step: 'm' });
+  if (pick.step === 'h') set({ h: Math.round(deg / 30) % 12, step: 'm' });
   else set({ m: (Math.round(deg / 30) * 5) % 60 });
 };
-$('am').onclick = () => set({ pm: false });
-$('pm').onclick = () => set({ pm: true });
+// 時計の真ん中から左右どちらかへフリックすると午前午後が入れ替わる
+let flickFrom = null;
+let flicked = false;
+$('clock').onpointerdown = (e) => {
+  flicked = false;
+  const box = $('clock').getBoundingClientRect();
+  const fromCenter = Math.hypot(e.clientX - box.left - box.width / 2, e.clientY - box.top - box.height / 2);
+  flickFrom = fromCenter < box.width * 0.28 ? { x: e.clientX, y: e.clientY } : null;
+};
+$('clock').onpointerup = (e) => {
+  if (!flickFrom) return;
+  const dx = Math.abs(e.clientX - flickFrom.x);
+  const dy = Math.abs(e.clientY - flickFrom.y);
+  flickFrom = null;
+  if (dx < 24 || dx <= dy) return;
+  flicked = true;
+  set({ pm: !pick.pm });
+};
 $('rdH').onclick = () => set({ step: 'h' });
 $('rdM').onclick = () => set({ step: 'm' });
 
 document.querySelectorAll('#quick button').forEach((b) => {
   b.onclick = () => {
     const t = new Date(Date.now() + b.dataset.min * 60e3);
-    set({ date: midnight(t), pm: t.getHours() >= 12, h: t.getHours() % 12 || 12, m: t.getMinutes(), step: 'h' });
+    set({ date: midnight(t), pm: t.getHours() >= 12, h: t.getHours() % 12, m: t.getMinutes(), step: 'h' });
   };
 });
 
@@ -143,6 +160,11 @@ $('calDlg').onclick = (e) => e.target === $('calDlg') && $('calDlg').close();
 // ---- 予約一覧 ----
 $('openList').onclick = () => $('listDlg').showModal();
 $('closeList').onclick = () => $('listDlg').close();
+$('copyQuick').onclick = async () => {
+  await navigator.clipboard.writeText(`${location.origin}/q#k=${ownerToken()}`);
+  $('copyQuick').textContent = 'コピーしました';
+  setTimeout(() => ($('copyQuick').textContent = 'クイック登録のURLをコピー'), 1500);
+};
 
 const days = new Set([1, 2, 3, 4, 5]);
 WD.forEach((w, i) => {
@@ -197,13 +219,16 @@ const item = (r, isTask) => {
   if (isTask) {
     li.querySelector('.check').onclick = async () => {
       li.classList.add('done');
-      await fetch(`/api/reminders/${r.id}/done`, { method: 'POST' });
+      await api(`reminders/${r.id}/done`, { method: 'POST' });
+      // 繰り返しは次回の通知でまた使うので内容を残す
+      if (r.next === null) await textDel(r.id);
       load();
     };
   } else {
     li.querySelector('.del').onclick = async () => {
       if (!confirm('削除しますか？')) return;
-      await fetch(`/api/reminders/${r.id}`, { method: 'DELETE' });
+      await api(`reminders/${r.id}`, { method: 'DELETE' });
+      await textDel(r.id);
       load();
     };
   }
@@ -211,7 +236,12 @@ const item = (r, isTask) => {
 };
 
 async function load() {
-  const list = await (await fetch('/api/reminders')).json();
+  const list = await (await api('reminders')).json();
+  // サーバーに内容が残っていたら（以前の登録・クイック登録）端末へ移してサーバーから消す
+  const moved = list.filter((r) => r.text);
+  await Promise.all(moved.map((r) => textPut(r.id, r.text)));
+  if (moved.length) await api('reminders/forget', { method: 'POST', body: JSON.stringify({ ids: moved.map((r) => r.id) }) });
+  for (const r of list) r.text ??= (await textGet(r.id)) ?? '（内容なし）';
   // 現在のタスク = 通知時刻を過ぎて未完了のタスク。予約 = これから通知するもの
   const tasks = list.filter((r) => r.due);
   const scheduled = list.filter((r) => r.next !== null);
@@ -226,7 +256,9 @@ async function load() {
 // ---- 登録 ----
 $('form').onsubmit = async (e) => {
   e.preventDefault();
-  const body = { text: $('text').value, repeat: $('repeat').checked };
+  const text = $('text').value.trim();
+  if (!text) return alert('内容を入力してください');
+  const body = { repeat: $('repeat').checked };
   if (!$('clockBox').hidden && pick.h === null) return alert('時計で時刻を選んでください');
   if (body.repeat) {
     if (!days.size) return alert('曜日を選択してください');
@@ -240,8 +272,9 @@ $('form').onsubmit = async (e) => {
     if (at <= Date.now()) return alert('過ぎた時刻は登録できません');
     body.at = at.getTime();
   }
-  const res = await fetch('/api/reminders', { method: 'POST', body: JSON.stringify(body) });
+  const res = await api('reminders', { method: 'POST', body: JSON.stringify(body) });
   if (!res.ok) return alert('登録できませんでした');
+  await textPut((await res.json()).id, text);
   $('text').value = '';
   resetPick();
   load();
@@ -258,7 +291,7 @@ async function subscribe() {
   const sub =
     (await reg.pushManager.getSubscription()) ||
     (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC) }));
-  await fetch('/api/subscribe', { method: 'POST', body: JSON.stringify(sub) });
+  await api('subscribe', { method: 'POST', body: JSON.stringify(sub) });
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
@@ -267,15 +300,20 @@ if (!('PushManager' in window)) {
   $('notify').hidden = false;
   $('notify').onclick = () => alert('共有 →「ホーム画面に追加」から開いてください');
 } else if (Notification.permission === 'granted') {
-  subscribe();
+  // 以前から通知を受けていた端末は、ここで既存の予約を引き継ぐので読み直す
+  subscribe().then(load);
 } else {
   $('notify').hidden = false;
   $('notify').onclick = async () => {
     if ((await Notification.requestPermission()) !== 'granted') return;
     await subscribe();
     $('notify').hidden = true;
+    load();
   };
 }
+
+// ブラウザに端末内の保存データを消されにくくする
+navigator.storage?.persist?.();
 
 resetPick();
 sync();

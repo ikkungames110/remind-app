@@ -99,19 +99,19 @@ input[type="time"] { min-height: 44px; }
 #rep[hidden], [hidden] { display: none !important; }
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.days button, .seg span, .quick button, .ampm > button {
+.days button, .seg span, .quick button {
   border: 1px solid var(--line);
   background: var(--bg);
   border-radius: 10px;
   padding: 7px 0;
   text-align: center;
 }
-.days button.on, .seg input:checked + span, .quick button:active, .ampm > button.on {
+.days button.on, .seg input:checked + span, .quick button:active {
   background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
 }
-/* アナログ時計は右、時刻表示と午前午後は左に縦に並べる */
+/* アナログ時計は右、時刻表示と日付は左に縦に並べる */
 #clockBox { display: flex; gap: 12px; align-items: stretch; }
-#clock { display: block; flex: 0 0 min(58%, 24dvh); min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#clock { display: block; flex: 0 0 min(58%, 24dvh); min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
 #clock .face { fill: var(--bg); stroke: var(--line); }
 #clock .tick { stroke: var(--line); stroke-width: 1.5; }
 #clock .hand { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; }
@@ -120,8 +120,10 @@ input[type="time"] { min-height: 44px; }
 #clock .pickDot { fill: var(--accent); }
 #clock text { fill: var(--fg); font-size: 15px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 #clock text.sel { fill: var(--accent-fg); font-weight: 600; }
-.ampm { order: -1; flex: 1; min-width: 0; display: grid; grid-template-rows: auto 1fr 1fr; gap: 8px; }
-.readout { order: -1; display: flex; justify-content: center; align-items: center; font-size: 30px; font-variant-numeric: tabular-nums; }
+#clock text.ap { fill: var(--muted); font-size: 12px; }
+.side { order: -1; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+#dateBtn { flex: none; text-align: center; padding: 10px 2px; white-space: nowrap; font-size: 15px; }
+.readout { display: flex; justify-content: center; align-items: center; font-size: 30px; font-variant-numeric: tabular-nums; }
 .readout button { border: 0; background: none; border-radius: 8px; min-width: 44px; min-height: 56px; padding: 2px; }
 .readout button.on { background: var(--line); }
 /* カレンダーのポップアップ */
@@ -145,6 +147,7 @@ dialog.full { width: 100%; max-width: none; height: 100dvh; max-height: none; ma
 }
 .fullIn h2 { font-size: 18px; flex: none; }
 .fullIn .sub { flex: none; margin: 0; }
+.link { flex: none; border: 0; background: none; color: var(--muted); font-size: 13px; padding: 6px; }
 .empty { flex: 1; color: var(--muted); text-align: center; padding-top: 40dvh; }
 /* 画面の下端まで背景を伸ばし、文字だけホームバーの上に置く */
 .ghost {

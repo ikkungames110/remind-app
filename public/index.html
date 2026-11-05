@@ -27,7 +27,6 @@
     </div>
 
     <div class="row">
-      <button type="button" id="dateBtn" class="field"></button>
       <label class="switch"><span>繰り返し</span><input type="checkbox" id="repeat"></label>
     </div>
     <div id="quick" class="quick">
@@ -53,12 +52,11 @@
 
     <div id="clockBox">
       <svg id="clock" viewBox="0 0 200 200" aria-label="時計"></svg>
-      <div class="ampm">
-        <button type="button" id="am">午前</button>
+      <div class="side">
         <div class="readout">
           <button type="button" id="rdH" aria-label="時を選ぶ"></button><span>:</span><button type="button" id="rdM" aria-label="分を選ぶ"></button>
         </div>
-        <button type="button" id="pm">午後</button>
+        <button type="button" id="dateBtn" class="field"></button>
       </div>
     </div>
 
@@ -85,9 +83,11 @@
     <h2>予約一覧</h2>
     <p id="listEmpty" class="empty" hidden>予約はありません</p>
     <ul id="list" class="list"></ul>
+    <button type="button" id="copyQuick" class="link">クイック登録のURLをコピー</button>
     <button type="button" id="closeList" class="sub">閉じる</button>
   </div>
 </dialog>
+<script src="/store.js"></script>
 <script src="/voice.js"></script>
 <script src="/app.js"></script>
 </body>
